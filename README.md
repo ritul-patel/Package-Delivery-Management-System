@@ -1,67 +1,126 @@
 # 📦 Package Delivery Management System
 
-A relational database system designed for managing package delivery operations including users, payments, shipments, tracking, and feedback.  
-This project covers complete database normalization (up to BCNF), schema design, SQL queries, and data population.
+A fully relational SQL-based database project that models a real-world package delivery company.  
+It includes database design, normalization (BCNF), functional dependencies, sample data, and complex SQL queries.
+
+> 🔥 Built for academic submission and technical interviews — structured, normalized, and query-ready.
 
 ---
 
 ## 🧠 Overview
 
-This system supports core functionalities like:
+This system helps manage:
+- Users and their addresses
+- Sending and receiving packages
+- Shipment and tracking of packages
+- Driver & vehicle management
+- Payment and feedback flow
 
-- User and contact management
-- Sending and tracking packages
-- Managing shipment and delivery details
-- Payment integration
-- Feedback collection
-
----
-
-## 🗃️ Database Schema
-
-### Main Tables:
-- **User**(`userid`, name, city, ...)
-- **Email**(`email`, `userid`)
-- **Payment**(`paymentid`, `userid`, amount, status, method)
-- **Feedback**(`feedback_id`, `userid`, rating, comments)
-- **Send**(`sender_id`, `receiver_id`, `package_id`)
-- **Package**(`package_id`, weight, status, shipment_id)
-- **Shipment**(`shipment_id`, delivery_time, driver_id, vehicle_id, package_id)
-- **Tracking**(`tracking_id`, `shipment_id`, current_location, time_stamp)
-- **Vehicle**(`vehicle_id`, type, capacity, status)
-- **Driver**(`driver_id`, vehicle_id, phone_no, license, status)
+Everything is backed by a **BCNF-compliant schema** with realistic sample data.
 
 ---
 
-## 📐 Normalization (BCNF)
+## 📁 Project Structure
 
-> **BCNF Definition**: A relation is in BCNF if for every non-trivial functional dependency (X → Y), X is a superkey.
-
-✔️ All functional dependencies have superkeys on the left-hand side.  
-✔️ No partial or transitive dependencies exist.  
-✅ **Conclusion**: All tables are in **BCNF**.
+```bash
+📦 Package-Delivery-Management-System/
+├── README.md
+├── schema.sql               # CREATE TABLE scripts
+├── data.sql                 # Sample INSERT data
+├── queries.sql              # SQL SELECT queries
+├── docs/
+│   ├── ERD.png              # Entity Relationship Diagram
+│   ├── SchemaDiagram.png    # Relational Schema overview
+│   ├── final-FD.pdf         # Functional Dependencies
+│   ├── final-BCNF.pdf       # BCNF normalization check
+│   └── quary.pdf            # SQL challenges and joins
+```
 
 ---
 
-## 🔧 SQL Scripts
+## 🛠️ Setup Instructions
 
-### 📄 DDL (Table Creation)
+1. **Clone the repository:**
+```bash
+git clone https://github.com/ritul-patel/Package-Delivery-Management-System.git
+cd Package-Delivery-Management-System
+```
 
-All tables include:
-- Proper **primary and foreign keys**
-- **ON DELETE / UPDATE CASCADE**
-- **CHECK** constraints
-
-Example:
-
+2. **Create and open the database:**
 ```sql
-CREATE TABLE User (
-  userid INT PRIMARY KEY,
-  name VARCHAR(100),
-  city VARCHAR(100),
-  pin VARCHAR(20),
-  address_line1 VARCHAR(255),
-  address_line2 VARCHAR(255),
-  country VARCHAR(100),
-  state VARCHAR(100)
-);
+CREATE DATABASE package_delivery;
+USE package_delivery;
+```
+
+3. **Import schema and data:**
+```bash
+mysql -u root -p package_delivery < schema.sql
+mysql -u root -p package_delivery < data.sql
+```
+
+4. **Run the sample queries:**
+Use a SQL client or:
+```bash
+mysql -u root -p package_delivery < queries.sql
+```
+
+---
+
+## 🗂️ Documentation Highlights
+
+### 🧾 Functional Dependencies (`docs/final-FD.pdf`)
+Each table is analyzed for its functional dependencies. Example:
+```
+User: userid → name, pin, address, email, city, state
+Payment: payment_id → amount, method, status
+```
+
+### 🧠 BCNF Verification (`docs/final-BCNF.pdf`)
+Every table satisfies:
+> If X → Y is a functional dependency, then X is a superkey.
+
+✅ No partial or transitive dependencies.  
+✅ All tables are fully in **BCNF**.
+
+### 📐 ER Diagram & Schema
+- `ERD.png`: Shows entity relationships (1:N, N:1)
+- `SchemaDiagram.png`: Shows tables, attributes, keys
+
+Use these during interviews to explain your design logic.
+
+---
+
+## 💾 Sample SQL Queries
+
+Some example queries from `queries.sql`:
+
+🔹 Users with their email addresses:
+```sql
+SELECT u.name, e.email
+FROM User u
+JOIN Email e ON u.userid = e.userid;
+```
+
+🔹 Deliveries where sender and receiver live in the same city:
+```sql
+SELECT u1.name AS sender, u2.name AS receiver, sh.delivery_time
+FROM User u1
+JOIN Send s ON u1.userid = s.sender
+JOIN User u2 ON s.receiver = u2.userid
+JOIN Shipment sh ON s.package_id = sh.package_id
+WHERE u1.city = u2.city AND sh.delivery_time IS NOT NULL;
+```
+
+🔹 Completed payments:
+```sql
+SELECT u.name, sh.delivery_time
+FROM Payment p
+JOIN Shipment sh ON p.payment_id = sh.payment_id
+JOIN User u ON p.userid = u.userid
+WHERE p.status = 'Completed';
+```
+
+More advanced queries in `docs/quary.pdf`.
+
+---
+
